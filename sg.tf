@@ -51,13 +51,12 @@ resource "aws_security_group_rule" "service_in_lb" {
 # communication. This is mostly for testing. Avoid in prod. This
 # rule is conditionally created if the ports var is populated.
 resource "aws_security_group_rule" "service_in" {
-  # BUG: THE COUNT LINE IS A HACK TO WORK AROUND A TERRAFORM BUG...
-  count       = local.network_mode == "awsvpc" ? local.ports_length : 0
+  for_each    = local.network_mode == "awsvpc" ? local.ports : null
   description = "Allow inbound TCP connections directly to ECS service ${var.name}"
 
   type        = "ingress"
-  from_port   = element(local.ports, count.index)
-  to_port     = element(local.ports, count.index)
+  from_port   = each.key
+  to_port     = each.key
   protocol    = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
 
